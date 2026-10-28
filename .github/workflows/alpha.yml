@@ -1,7 +1,7 @@
 name: alpha
 
 # Собирает из исходников и публикует в prerelease (пометка «alpha»):
-#   boot-linux.img              — ядро (v7.1.5 + kernel.patch) + pivot-initramfs
+#   boot-linux.img              — ядро (v7.3 + kernel.patch) + pivot-initramfs
 #   boot-display-console-rescue.img — rescue-образ (консоль на экране/USB)
 #   linux_rootfs.sparse.img     — Ubuntu 26.04 для раздела cust
 #
@@ -99,16 +99,16 @@ jobs:
           /tmp/t
           echo "нативный aarch64-тулчейн на месте"
 
-      - name: Ядро + rescue-образ (клон v7.1.5, kernel.patch, прошивки)
+      - name: Ядро + rescue-образ (клон v7.3, kernel.patch, прошивки)
         run: ./build.sh
 
       - name: 'Модули ядра (нужны rootfs-джобе: ADSP, звук, сенсоры)'
         run: |
-          make -C out/src/linux O="$PWD/out/build/linux-7.1.5" ARCH=arm64 \
+          make -C out/src/linux O="$PWD/out/build/linux-7.3" ARCH=arm64 \
             CROSS_COMPILE= modules -j"$(nproc)"
-          make -C out/src/linux O="$PWD/out/build/linux-7.1.5" ARCH=arm64 \
+          make -C out/src/linux O="$PWD/out/build/linux-7.3" ARCH=arm64 \
             CROSS_COMPILE= modules_install \
-            INSTALL_MOD_PATH="$PWD/out/build/linux-7.1.5"
+            INSTALL_MOD_PATH="$PWD/out/build/linux-7.3"
 
       - name: boot-linux.img (ядро + pivot-initramfs)
         run: REDMI="$PWD" bash rootfs/tools/pack-boot-linux.sh
@@ -118,7 +118,7 @@ jobs:
           mkdir -p dist
           cp rootfs/out/boot-linux.img dist/
           cp out/boot-display-console-rescue.img dist/
-          tar -C out/build/linux-7.1.5 -czf dist/modules.tar.gz lib/modules
+          tar -C out/build/linux-7.3 -czf dist/modules.tar.gz lib/modules
           sha256sum dist/* > dist/sha256sums.txt
           ls -la dist
 
@@ -152,9 +152,9 @@ jobs:
 
       - name: Модули ядра из kernel-джобы + проприетарные прошивки
         run: |
-          mkdir -p out/build/linux-7.1.5
-          tar -C out/build/linux-7.1.5 -xzf /tmp/boot/modules.tar.gz
-          ls out/build/linux-7.1.5/lib/modules
+          mkdir -p out/build/linux-7.3
+          tar -C out/build/linux-7.3 -xzf /tmp/boot/modules.tar.gz
+          ls out/build/linux-7.3/lib/modules
           ./tools/fetch-firmware.sh
 
       - name: ADB-ключ (без него adbd поднимется, но хост будет unauthorized)
@@ -225,7 +225,7 @@ jobs:
           cat sha256sums.txt
 
           cat > notes.md <<'EOF'
-          Сборка из исходников (ядро Linux v7.1.5 + `kernel.patch`, rootfs Ubuntu 26.04).
+          Сборка из исходников (ядро Linux v7.3 + `kernel.patch`, rootfs Ubuntu 26.04).
 
           **Артефакты**
 
